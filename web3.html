@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Static Template</title>
+
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.4-rc.0/web3.min.js"
+      integrity="sha512-RGPKVfQewHGfk9yaB7ThGPKAQU+civS5awsfStLg22jrWbqgDkNzPtIwNFpFApr3ccjB730SRxi+KnDjhIuTpw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <script>
+      const getAddress = async () => {
+        const accounts = await web3.eth.getAccounts();
+        window.contract.defaultAccount = accounts[0];
+        return accounts[0];
+      };
+
+      const getBalance = async (address, tokenId) => {
+        const spacePunksBalance = await window.contract.methods.balanceOf(address, tokenId).call();
+
+        return spacePunksBalance;
+      };
+
+      const mint = async (address, name, initBookAmount, content) => {
+        const result = await contract.methods
+          .mintBook({ name, initBookAmount, lock: false, content, data: 0x00 })
+          .send({ from: address });
+
+        const tokenId = result.events.MintBook.returnValues.tokenId;
+
+        return tokenId;
+      };
+
+      const getSpec = async (address, tokenId) => {
+        const spec = await window.contract.methods.bookSpec(tokenId).call();
+
+        console.log({ spec });
+      };
+    </script>
+  </head>
+
+  <body>
+    <div class="py-64 container mx-auto px-6">
+      <div class=" ">
+        <h2 class="text-5xl text-green-600">Heading</h2>
+      </div>
+      <div
+        class="bg-gray-200"
+        x-data="{address:'',tokenId:'',balance:0,name:'',initBookAmount:0,content:'',mintTokenId:''}"
+      >
+        <button
+          @click="address=await getAddress()"
+          class="bg-blue-800 text-white px-4 py-2 rounded-lg mt-4"
+        >
+          Get Address
+        </button>
+        <span x-text="address"></span>
+
+        <input
+          x-model="name"
+          type="text"
+          class="border p-2 w-full mb-2 mt-6"
+          placeholder="Input Book Name..."
+        />
+
+        <input
+          x-model="initBookAmount"
+          type="text"
+          class="border p-2 w-full mb-2 mt-6"
+          placeholder="Input Book initBookAmount..."
+        />
+
+        <input
+          x-model="content"
+          type="text"
+          class="border p-2 w-full mb-2 mt-6"
+          placeholder="Input Book content..."
+        />
+
+        <button
+          @click="mintTokenId=await mint(address,name,initBookAmount,content)"
+          class="bg-blue-800 text-white px-4 py-2 rounded-lg mt-4"
+        >
+          Mint
+        </button>
+
+        <span x-text="mintTokenId"></span>
+
+        <input
+          x-model="tokenId"
+          type="text"
+          class="border p-2 w-full mb-2 mt-6"
+          placeholder="Input tokenId..."
+        />
+
+        <button
+          @click="balance=await getBalance(address,tokenId)"
+          class="bg-blue-800 text-white px-4 py-2 rounded-lg mt-4"
+        >
+          Get Balance
+        </button>
+        <p x-text="balance"></p>
+
+        <button
+          @click="balance=await getSpec(address,tokenId)"
+          class="bg-blue-800 text-white px-4 py-2 rounded-lg mt-4"
+        >
+          Get getSpec
+        </button>
+      </div>
+    </div>
+
+    <script type="module">
+      import { ABI, ADDRESS } from '/config.js';
+
+      window.onload = async () => {
+        if (window.ethereum) {
+          window.web3 = new Web3(window.ethereum);
+          await window.ethereum.enable();
+
+          const contract = new window.web3.eth.Contract(ABI, ADDRESS);
+
+          window.contract = contract;
+
+          console.log('web3 loaded');
+        } else {
+          alert('No ETH browser extension detected.');
+        }
+      };
+    </script>
+  </body>
+</html>
